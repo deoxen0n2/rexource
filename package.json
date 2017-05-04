@@ -1,6 +1,6 @@
 {
   "name": "rexource",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "REST API client made ...easy?",
   "main": "lib/index.js",
   "author": "Saran Siriphantnon",
@@ -11,7 +11,9 @@
     "test": "tape -r babel-register test/unit/**/*.js | tap-spec",
     "test-integration": "tape -r babel-register test/integration/**/*.js | tap-spec"
   },
-  "files": [ "lib" ],
+  "files": [
+    "lib"
+  ],
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
