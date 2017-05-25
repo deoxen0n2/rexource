@@ -28,8 +28,10 @@ Base.prototype.put = function (body = {}) {
   return this.axios.put(this.baseURL, body)
 }
 
-Base.prototype.post = function (body = {}) {
-  return this.axios.post(this.baseURL, body)
+Base.prototype.post = function (body = {}, baseURL) {
+  baseURL = baseURL || this.baseURL
+
+  return this.axios.post(baseURL, body)
 }
 
 Base.prototype.delete = function (query = {}) {
