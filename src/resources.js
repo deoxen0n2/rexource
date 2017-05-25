@@ -4,7 +4,7 @@ import { inherits } from 'util'
 import { Base } from './base'
 import { Resource } from './resource'
 
-export function Resources (baseURL, options = {}, data = {}) {
+export function Resources (baseURL, options = {}, data = {}, settings = {}) {
   const resources = function (id) {
     return new resources.Resource(resources.getResourceURL(id), options, data)
   }
@@ -13,40 +13,51 @@ export function Resources (baseURL, options = {}, data = {}) {
   Object.setPrototypeOf(resources, Resources.prototype)
 
   resources.data = data
+  resources.settings = settings
 
   return resources
 }
 
 inherits(Resources, Base)
 
-Resources.extend = function (resourcePath, protoProps) {
-  function ExtendedResources (baseURL, options = {}, data = {}) {
+Resources.extend = function (resourcePath, protoProps, BaseResources = null) {
+  const Rs = BaseResources || Resources
+
+  function ExtendedResources (baseURL, options = {}, data = {}, settings = {}) {
     const resourcesURL = urljoin(baseURL, resourcePath)
-    const resources = Resources(resourcesURL, options, data)
+    const resources = Rs(resourcesURL, options, data, settings)
 
     Object.setPrototypeOf(resources, ExtendedResources.prototype)
 
     return resources
   }
 
-  inherits(ExtendedResources, Resources)
+  inherits(ExtendedResources, Rs)
 
   Object.assign(ExtendedResources.prototype, protoProps)
 
+  ExtendedResources.extend = (resourcePath, protoProps) => Rs.extend(resourcePath, protoProps, ExtendedResources)
+  ExtendedResources.__super__ = Rs.prototype
   ExtendedResources.prototype.resourcePath = resourcePath
 
   return ExtendedResources
 }
 
+Resources.prototype.beforeCreate = function () {
+  return Promise.resolve(...arguments)
+}
+
 Resources.prototype.create = function () {
-  return this.post(...arguments).then(response => this.afterCreate(response))
+  return this.beforeCreate(...arguments)
+    .then(args => this.post(...args).then(response => this.afterCreate(response)))
 }
 
 Resources.prototype.afterCreate = function defaultAfterCreate (response) {
+  const R = this.Resource || Resource
   const { data } = response
   const { id } = data
 
-  return new this.Resource(this.getResourceURL(id), this.options, data)
+  return new R(this.getResourceURL(id), this.options, data)
 }
 
 Resources.prototype.list = function () {
@@ -68,8 +79,6 @@ Resources.prototype.afterList = function defaultAfterList (response) {
 
   return new this.constructor(this.baseURL, this.options, data)
 }
-
-Resources.prototype.Resource = Resource
 
 Resources.prototype.toJSON = function () {
   return this.data
