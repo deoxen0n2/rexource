@@ -35,8 +35,19 @@ export class Resource extends Base {
     this.data = data
   }
 
+  before () {
+    return Promise.resolve(arguments)
+  }
+
+  beforeRetrieve () {
+    return Promise.resolve(arguments)
+  }
+
   retrieve () {
-    return this.get(...arguments).then(response => this.afterRetrieve(response))
+    return this.before(...arguments)
+      .then(args => this.beforeRetrieve(...args))
+      .then(args => this.get(...args))
+      .then(response => this.afterRetrieve(response))
   }
 
   afterRetrieve (response) {
